@@ -5,7 +5,7 @@ import { IDoublyLinkedList } from "../interface/IDoublyLinkedList.sol";
 
 type NodeId is bytes32;
 
-using {_eq as ==, _neq as !=} for NodeId global;
+using { _eq as ==, _neq as != } for NodeId global;
 
 function _eq(NodeId a, NodeId b) pure returns (bool) {
     return NodeId.unwrap(a) == NodeId.unwrap(b);

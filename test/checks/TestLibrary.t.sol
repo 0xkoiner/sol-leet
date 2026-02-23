@@ -100,7 +100,6 @@ contract TestLibrary is Data {
         NodeId id = DoublyLinkedListLib.computeNodeId(node.value, nonce - 1);
         _assertInitNode(id, headId, tailId, size, nonce, headNode, tailNode);
 
-
         for (uint256 i = 0; i < LOOPS; i++) {
             vm.prank(address(0xbabe));
             doublyLinkedList.insertEnd(node.value);
@@ -151,7 +150,10 @@ contract TestLibrary is Data {
         IDoublyLinkedList.Node memory _tailNode,
         uint256 _expectedHeadNonce,
         uint256 _expectedTailNonce
-    ) internal view {
+    )
+        internal
+        view
+    {
         NodeId expectedHeadId = DoublyLinkedListLib.computeNodeId(node.value, _expectedHeadNonce);
         NodeId expectedTailId = DoublyLinkedListLib.computeNodeId(node.value, _expectedTailNonce);
 

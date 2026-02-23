@@ -33,7 +33,7 @@ contract DoublyLinkedList is IDoublyLinkedList {
     function removeByValue(uint256 _value) external {
         if (isEmpty()) return;
 
-        if (list.checkHead(_value) ||  list.checkTail(_value)) return;
+        if (list.checkHead(_value) || list.checkTail(_value)) return;
 
         NodeId currentId = list.nodes[list.headId].next;
 
@@ -60,7 +60,6 @@ contract DoublyLinkedList is IDoublyLinkedList {
             list.nodes[list.tailId].next = _newId;
             list.nodes[_newId] = Node(_value, list.tailId, NodeId.wrap(0));
             list.tailId = _newId;
-
         }
     }
 
@@ -71,7 +70,6 @@ contract DoublyLinkedList is IDoublyLinkedList {
             list.nodes[list.headId].prev = _newId;
             list.nodes[_newId] = Node(_value, NodeId.wrap(0), list.headId);
             list.headId = _newId;
-
         }
     }
 
