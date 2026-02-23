@@ -14,6 +14,11 @@ contract TestLibrary is Data {
 
     IDoublyLinkedList.Node private node;
 
+    uint256 private sizeChecker;
+    uint256 private nonceChecker;
+
+    uint256 private constant LOOPS = 5;
+
     function setUp() public override {
         super.setUp();
 
@@ -40,6 +45,8 @@ contract TestLibrary is Data {
     function test_init_node_by_insert_end() external {
         vm.prank(address(0xbabe));
         doublyLinkedList.insertEnd(node.value);
+        sizeChecker++;
+        nonceChecker++;
 
         assertFalse(doublyLinkedList.isEmpty(), "Head and Tail is empty");
 
@@ -51,9 +58,10 @@ contract TestLibrary is Data {
         _assertInitNode(id, headId, tailId, size, nonce, headNode, tailNode);
     }
 
-    function test_init_node_by_insert_front() external {
+    function test_insert_front() external {
         vm.prank(address(0xbabe));
         doublyLinkedList.insertFront(node.value);
+        _increasSizeAndNonce();
 
         assertFalse(doublyLinkedList.isEmpty(), "Head and Tail is empty");
 
@@ -63,6 +71,52 @@ contract TestLibrary is Data {
 
         NodeId id = DoublyLinkedListLib.computeNodeId(node.value, nonce - 1);
         _assertInitNode(id, headId, tailId, size, nonce, headNode, tailNode);
+
+        for (uint256 i = 0; i < LOOPS; i++) {
+            // Second insert
+            vm.prank(address(0xbabe));
+            doublyLinkedList.insertFront(node.value);
+            _increasSizeAndNonce();
+
+            (headId, tailId, size, nonce) = doublyLinkedList.list();
+            headNode = doublyLinkedList.getNode(headId);
+            tailNode = doublyLinkedList.getNode(tailId);
+
+            _assertHeadAndTail(headId, tailId, size, nonce, headNode, tailNode, nonceChecker - 1, 0);
+        }
+    }
+
+    function test_insert_end() external {
+        vm.prank(address(0xbabe));
+        doublyLinkedList.insertEnd(node.value);
+        _increasSizeAndNonce();
+
+        assertFalse(doublyLinkedList.isEmpty(), "Head and Tail is empty");
+
+        (NodeId headId, NodeId tailId, uint256 size, uint256 nonce) = doublyLinkedList.list();
+        IDoublyLinkedList.Node memory headNode = doublyLinkedList.getNode(headId);
+        IDoublyLinkedList.Node memory tailNode = doublyLinkedList.getNode(headId);
+
+        NodeId id = DoublyLinkedListLib.computeNodeId(node.value, nonce - 1);
+        _assertInitNode(id, headId, tailId, size, nonce, headNode, tailNode);
+
+
+        for (uint256 i = 0; i < LOOPS; i++) {
+            vm.prank(address(0xbabe));
+            doublyLinkedList.insertEnd(node.value);
+            _increasSizeAndNonce();
+
+            (headId, tailId, size, nonce) = doublyLinkedList.list();
+            headNode = doublyLinkedList.getNode(headId);
+            tailNode = doublyLinkedList.getNode(tailId);
+
+            _assertHeadAndTail(headId, tailId, size, nonce, headNode, tailNode, 0, nonceChecker - 1);
+        }
+    }
+
+    function _increasSizeAndNonce() internal {
+        sizeChecker++;
+        nonceChecker++;
     }
 
     function _assertInitNode(
@@ -79,12 +133,35 @@ contract TestLibrary is Data {
     {
         assertEq(NodeId.unwrap(_headId), NodeId.unwrap(_id), "Hashes isn't same");
         assertEq(NodeId.unwrap(_tailId), NodeId.unwrap(_id), "Hashes isn't same");
-        assertEq(_size, 1, "Incorrect size");
-        assertEq(_nonce, 1, "Incorrect nonce");
+        assertEq(_size, sizeChecker, "Incorrect size");
+        assertEq(_nonce, nonceChecker, "Incorrect nonce");
         assertEq(_headNode.value, node.value, "Not same node values");
         assertEq(NodeId.unwrap(_headNode.next), bytes32(0), "Next should be zero");
         assertEq(NodeId.unwrap(_headNode.prev), bytes32(0), "Prev should be zero");
         assertEq(NodeId.unwrap(_tailNode.next), bytes32(0), "Next should be zero");
         assertEq(NodeId.unwrap(_tailNode.prev), bytes32(0), "Prev should be zero");
+    }
+
+    function _assertHeadAndTail(
+        NodeId _headId,
+        NodeId _tailId,
+        uint256 _size,
+        uint256 _nonce,
+        IDoublyLinkedList.Node memory _headNode,
+        IDoublyLinkedList.Node memory _tailNode,
+        uint256 _expectedHeadNonce,
+        uint256 _expectedTailNonce
+    ) internal view {
+        NodeId expectedHeadId = DoublyLinkedListLib.computeNodeId(node.value, _expectedHeadNonce);
+        NodeId expectedTailId = DoublyLinkedListLib.computeNodeId(node.value, _expectedTailNonce);
+
+        assertEq(NodeId.unwrap(_headId), NodeId.unwrap(expectedHeadId), "Head id mismatch");
+        assertEq(NodeId.unwrap(_tailId), NodeId.unwrap(expectedTailId), "Tail id mismatch");
+        assertEq(_size, sizeChecker, "Incorrect size");
+        assertEq(_nonce, nonceChecker, "Incorrect nonce");
+        assertEq(NodeId.unwrap(_headNode.prev), bytes32(0), "Head prev should be zero");
+        assertTrue(NodeId.unwrap(_headNode.next) != bytes32(0), "Head next should not be zero");
+        assertEq(NodeId.unwrap(_tailNode.next), bytes32(0), "Tail next should be zero");
+        assertTrue(NodeId.unwrap(_tailNode.prev) != bytes32(0), "Tail prev should not be zero");
     }
 }

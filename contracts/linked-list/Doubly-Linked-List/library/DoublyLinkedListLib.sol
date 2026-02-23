@@ -5,6 +5,16 @@ import { IDoublyLinkedList } from "../interface/IDoublyLinkedList.sol";
 
 type NodeId is bytes32;
 
+using {_eq as ==, _neq as !=} for NodeId global;
+
+function _eq(NodeId a, NodeId b) pure returns (bool) {
+    return NodeId.unwrap(a) == NodeId.unwrap(b);
+}
+
+function _neq(NodeId a, NodeId b) pure returns (bool) {
+    return NodeId.unwrap(a) != NodeId.unwrap(b);
+}
+
 library DoublyLinkedListLib {
     NodeId constant DEFAULT = NodeId.wrap(0);
 
@@ -28,6 +38,38 @@ library DoublyLinkedListLib {
         _list.headId = _newId;
         _list.tailId = _newId;
         _list.nodes[_newId] = IDoublyLinkedList.Node(_value, NodeId.wrap(0), NodeId.wrap(0));
+    }
+
+    function checkHead(List storage _list, uint256 _value) internal returns (bool) {
+        if (_list.nodes[_list.headId].value == _value) {
+            NodeId oldHead = _list.headId;
+            _list.headId = _list.nodes[oldHead].next;
+
+            if (_list.headId == DoublyLinkedListLib.DEFAULT) {
+                _list.tailId = NodeId.wrap(0);
+            } else {
+                _list.nodes[_list.headId].prev = NodeId.wrap(0);
+            }
+
+            delete _list.nodes[oldHead];
+            _list.size--;
+            return true;
+        }
+
+        return false;
+    }
+
+    function checkTail(List storage _list, uint256 _value) internal returns (bool) {
+        if (_list.nodes[_list.tailId].value == _value) {
+            NodeId oldTail = _list.tailId;
+            _list.tailId = _list.nodes[oldTail].prev;
+            _list.nodes[_list.tailId].next = NodeId.wrap(0);
+
+            delete _list.nodes[oldTail];
+            _list.size--;
+            return true;
+        }
+        return false;
     }
 
     function isEmpty(NodeId _headId, NodeId _tailId) internal pure returns (bool result) {
