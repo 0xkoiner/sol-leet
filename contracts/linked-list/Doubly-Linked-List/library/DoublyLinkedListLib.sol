@@ -8,24 +8,31 @@ type NodeId is bytes32;
 library DoublyLinkedListLib {
     NodeId constant DEFAULT = NodeId.wrap(0);
 
-    function computeNodeId(IDoublyLinkedList.Node memory _node) internal pure returns (NodeId nodeId) {
+    struct List {
+        NodeId headId;
+        NodeId tailId;
+        uint256 size;
+        uint256 nonce;
+        mapping(NodeId => IDoublyLinkedList.Node) nodes;
+    }
+
+    function computeNodeId(uint256 _value, uint256 _nonce) internal pure returns (NodeId nodeId) {
         assembly {
-            // _node is a memory pointer to the struct
-            // struct layout: [value (0x00) | next (0x20) | prev (0x40)]
-            nodeId := keccak256(_node, 0x60)
+            mstore(0x00, _value)
+            mstore(0x20, _nonce)
+            nodeId := keccak256(0x00, 0x40)
         }
     }
 
-    function isEmpty(
-        IDoublyLinkedList.Node storage _head,
-        IDoublyLinkedList.Node storage _tail
-    )
-        internal
-        view
-        returns (bool result)
-    {
+    function initNode(List storage _list, uint256 _value, NodeId _newId) internal {
+        _list.headId = _newId;
+        _list.tailId = _newId;
+        _list.nodes[_newId] = IDoublyLinkedList.Node(_value, NodeId.wrap(0), NodeId.wrap(0));
+    }
+
+    function isEmpty(NodeId _headId, NodeId _tailId) internal pure returns (bool result) {
         assembly {
-            result := and(iszero(sload(add(_head.slot, 2))), iszero(sload(add(_tail.slot, 1))))
+            result := and(iszero(_headId), iszero(_tailId))
         }
     }
 }

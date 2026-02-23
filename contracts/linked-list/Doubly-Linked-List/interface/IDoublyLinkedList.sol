@@ -9,4 +9,8 @@ interface IDoublyLinkedList {
         NodeId prev;
         NodeId next;
     }
+
+    function insertEnd(uint256 _value) external;
+
+    function isEmpty() external view returns (bool);
 }
