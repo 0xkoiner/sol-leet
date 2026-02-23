@@ -15,4 +15,17 @@ library DoublyLinkedListLib {
             nodeId := keccak256(_node, 0x60)
         }
     }
+
+    function isEmpty(
+        IDoublyLinkedList.Node storage _head,
+        IDoublyLinkedList.Node storage _tail
+    )
+        internal
+        view
+        returns (bool result)
+    {
+        assembly {
+            result := and(iszero(sload(add(_head.slot, 2))), iszero(sload(add(_tail.slot, 1))))
+        }
+    }
 }
