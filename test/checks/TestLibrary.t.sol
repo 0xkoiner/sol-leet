@@ -113,6 +113,49 @@ contract TestLibrary is Data {
         }
     }
 
+    function test_remove_by_value() external {
+        vm.prank(address(0xbabe));
+        doublyLinkedList.insertEnd(node.value);
+        _increasSizeAndNonce();
+
+        assertFalse(doublyLinkedList.isEmpty(), "Head and Tail is empty");
+
+        (NodeId headId, NodeId tailId, uint256 size, uint256 nonce) = doublyLinkedList.list();
+        IDoublyLinkedList.Node memory headNode = doublyLinkedList.getNode(headId);
+        IDoublyLinkedList.Node memory tailNode = doublyLinkedList.getNode(headId);
+
+        NodeId firstHeadId = headId;
+
+        NodeId id = DoublyLinkedListLib.computeNodeId(node.value, nonce - 1);
+        _assertInitNode(id, headId, tailId, size, nonce, headNode, tailNode);
+
+        for (uint256 i = 0; i < LOOPS; i++) {
+            vm.prank(address(0xbabe));
+            doublyLinkedList.insertEnd(node.value);
+            _increasSizeAndNonce();
+
+            (headId, tailId, size, nonce) = doublyLinkedList.list();
+            headNode = doublyLinkedList.getNode(headId);
+            tailNode = doublyLinkedList.getNode(tailId);
+
+            _assertHeadAndTail(headId, tailId, size, nonce, headNode, tailNode, 0, nonceChecker - 1);
+        }
+
+        vm.prank(address(0xbabe));
+        doublyLinkedList.removeByValue(node.value);
+        sizeChecker--;
+
+        (headId, tailId, size, nonce) = doublyLinkedList.list();
+        IDoublyLinkedList.Node memory delNode = doublyLinkedList.getNode(firstHeadId);
+        
+        assertEq(delNode.value, 0, "Deleted node value not 0");
+        assertEq(NodeId.unwrap(delNode.prev), bytes32(0), "Deleted node prev not 0");
+        assertEq(NodeId.unwrap(delNode.next), bytes32(0), "Deleted node next not 0");
+        assertNotEq(NodeId.unwrap(headId), NodeId.unwrap(firstHeadId), "Head should have changed");
+        assertEq(size, sizeChecker, "Incorrect size after removal");
+
+    }
+
     function _increasSizeAndNonce() internal {
         sizeChecker++;
         nonceChecker++;
