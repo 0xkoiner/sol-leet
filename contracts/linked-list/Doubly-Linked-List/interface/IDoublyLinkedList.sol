@@ -12,5 +12,11 @@ interface IDoublyLinkedList {
 
     function insertEnd(uint256 _value) external;
 
+    function insertFront(uint256 _value) external;
+
+    function removeByValue(uint256 _value) external;
+
     function isEmpty() external view returns (bool);
+
+    function getNode(NodeId _id) external view returns (Node memory);
 }

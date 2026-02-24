@@ -147,13 +147,12 @@ contract TestLibrary is Data {
 
         (headId, tailId, size, nonce) = doublyLinkedList.list();
         IDoublyLinkedList.Node memory delNode = doublyLinkedList.getNode(firstHeadId);
-        
+
         assertEq(delNode.value, 0, "Deleted node value not 0");
         assertEq(NodeId.unwrap(delNode.prev), bytes32(0), "Deleted node prev not 0");
         assertEq(NodeId.unwrap(delNode.next), bytes32(0), "Deleted node next not 0");
         assertNotEq(NodeId.unwrap(headId), NodeId.unwrap(firstHeadId), "Head should have changed");
         assertEq(size, sizeChecker, "Incorrect size after removal");
-
     }
 
     function _increasSizeAndNonce() internal {
